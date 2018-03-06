@@ -1,48 +1,25 @@
-'use strict';
-const {expect} = require('chai');
-const supertest = require('supertest');
-const request = supertest('http://localhost:3000');
+var _ = require('lodash');
+var express = require('express');
+var request = require('request-promise');
+var router = express.Router();
 
-describe('Test des endpoints /bookings', function() {
-	describe('création de reservation, POST /reservations', function() {
-		it('si la requete ne content pas les identifiants de l\'utilisateur, on reçoit un 401', function() {
-      return request
-				.post('/bookings')
-				.send({id_user: '123', id_flight: 'AF-444'})
-				.expect(401);
-    });
+router.post('/', async (req, res, next) => {
+  const {body} = req;
 
-		it('avec un user identifié, mais pas de body, on reçoit un 400', function() {
-      return request
-				.post('/bookings')
-				.set('authentification', 'MY_TOKEN')
-				.send()
-				.expect(400);
-    });
+  const authentification = req.get('authentification');
+  if (!authentification) {
+    return res.status(401).send({message: 'Il faut envoyer le token'});
+  }
 
-    it('si la requete a toutes les infos, on reçoit un 201 et la reference', function() {
-      return request
-				.post('/bookings')
-				.set('authentification', 'MY_TOKEN')
-				.send({id_user: '123', id_flight: 'AF-123'})
-				.expect(201)
-				.then(response => {
-					const body = response.body;
-					expect(body).to.have.property('reference');
-				});
-    });
-	});
+  if (_.isEmpty(body)) {
+    return res.status(400).send({message: 'Il manque de données'});
+  }
 
-  describe('consultation de reservation, GET /reservations/{id}', function() {
-    it('si la reservation n\'existe pas, on reçoit un 404');
+  if (!body.id_user || !body.id_flight) {
+    return res.status(400).send({message: 'Il manque de données'});
+  }
 
-    it('si la requete ne content pas les identifiants de l\'utilisateur, on reçoit un 401');
-
-    it('si la reservation existe et appartient à l\'utilisateur, on reçoit un 200');
-	});
-
-  describe('annulation de reservation, DELETE /reservations/{id}', function() {
-		it('si la reservation n\'existe pas, on reçoit un 404');
-    //etc etc etc
-	});
+	return res.status(201).send({reference: '123'});
 });
+
+module.exports = router;
